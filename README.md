@@ -8,6 +8,12 @@ Simple application which allows to visualise current location using ESP8266 and 
 * Google  Geolocation API Key
 * Google Maps Static API Key
 
+## Used libraries versions
+
+* Python 3.7
+* PyQt5 5.10.1
+* pyserial 3.4
+
 ## Functions
 
 * Automatically detects active COM port
