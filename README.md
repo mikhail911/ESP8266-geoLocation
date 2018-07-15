@@ -4,7 +4,7 @@ Simple application which allows to visualise current location using ESP8266 and 
 
 ## Requirments
 
-* ESP8266 with code (project was build based on geolocation code: https://github.com/techiesms/Geolocation by user: techiesms)
+* ESP8266 with code (project was build based on geolocation code: https://github.com/techiesms/Geolocation by user: techiesms) and serial connection to PC
 * Google  Geolocation API Key
 * Google Maps Static API Key
 
