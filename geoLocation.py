@@ -18,10 +18,12 @@ class serialMonitor(QMainWindow):
 	first_conn = True
 	current_port = ''
 	current_baud = 9600
+	lat = 0
+	long = 0
 	logging_dir = "serialMonitorLogs"
 	filename = ''+logging_dir +'/' + strftime("%a-%d-%b-%Y-%H-%M-%S", gmtime()) + '.txt'
 	baudrates = ["9600", "115200", "300", "1200", "2400", "4800", "14400", "19200", "31250", "38400", "57600"]
-	apikey = " " # Google Maps Static API Key
+	apikey = "" # Google Maps Static API Key
 
 	def __init__(self):
 		super(serialMonitor, self).__init__()
@@ -46,6 +48,9 @@ class serialMonitor(QMainWindow):
 		self.buttonStop = QPushButton()
 		self.buttonStop.setText('Stop')
 		self.buttonStop.clicked.connect(self.stopReading)
+		self.buttonOpen = QPushButton()
+		self.buttonOpen.setText('Open map in web browser')
+		self.buttonOpen.clicked.connect(self.openMap)
 
 		self.scroll_button = QCheckBox('Autoscroll')
 		self.scroll_button.setCheckState(Qt.Checked)
@@ -77,6 +82,7 @@ class serialMonitor(QMainWindow):
 		self.layoutV.addWidget(self.buttonStart)
 		self.layoutV.addWidget(self.buttonStop)
 		self.layoutV.addWidget(self.label)
+		self.layoutV.addWidget(self.buttonOpen)
 		self.layoutV.addWidget(self.textEdit)
 		self.setStatusBar(self.statusbar)
 		self.widget = QWidget()
@@ -84,6 +90,32 @@ class serialMonitor(QMainWindow):
 		self.widget.setFont(font)
 		self.setCentralWidget(self.widget)
 		self.refreshMap()
+
+	def convLat(self, latitude):
+		if latitude > 0:
+			dirr = "N"
+			pre = ""
+		else:
+			dirr = "S"
+			pre = "-"
+		latitude = abs(latitude)
+		degrees = int(latitude)
+		minutes = int((latitude - degrees) * 60)
+		seconds = round((latitude - degrees - minutes/60)*3600, 2)
+		return(pre + "" +str(degrees)+"\xb0 "+ str(minutes)+"' " +str(seconds)+"'' " +str(dirr)+"")
+
+	def convLon(self, longitude):
+		if longitude > 0:
+			dirr = "E"
+			pre = ""
+		else:
+			dirr = "W"
+			pre = "-"
+		longitude = abs(longitude)
+		degrees = int(longitude)
+		minutes = int((longitude - degrees) * 60)
+		seconds = round((longitude - degrees - minutes/60)*3600, 2)
+		return(pre + "" +str(degrees)+"\xb0 "+ str(minutes)+"' " +str(seconds)+"'' " +str(dirr)+"")
 
 	def serial_ports(self):
 		ports = ['COM%s' % (i + 1) for i in range(256)]
@@ -137,8 +169,6 @@ class serialMonitor(QMainWindow):
 		thread3.start()
 
 	def read(self):
-		lat = ''
-		long = ''
 		self.current_port = str(self.portBox.currentText())
 		self.current_baud = int(self.baudBox.currentText())
 		if self.first_conn == True:
@@ -154,13 +184,13 @@ class serialMonitor(QMainWindow):
 				data2 = data.split()
 				if len(data2) != 0: 
 					if data2[0] == "Latitude":
-						lat = data2[2]
+						self.lat = data2[2]
 					if data2[0] == "Longitude":
-						long = data2[2]
+						self.long = data2[2]
 					if data2[0] == "Accuracy":
 						acc = data2[2]
-						self.statusbar.showMessage("Current location: Latitude: "+lat+", Longitude: "+long+", Accuracy: "+acc+"")
-						self.mapRefresh(lat, long)
+						self.statusbar.showMessage("Current location: Latitude: "+self.convLat(float(self.lat))+", Longitude: "+self.convLon(float(self.long))+", Accuracy: "+acc+"")
+						self.mapRefresh(self.lat, self.long)
 				self.reader.emit(str(data))
 			except serial.SerialException as e:
 				# There is no new data from serial port
@@ -182,6 +212,9 @@ class serialMonitor(QMainWindow):
 			file.write("Selected port: " + self.current_port + ", baud rate: " + str(self.current_baud) + "\n")
 			file.write("---------------------------------------------------------\n")
 			file.close()
+
+	def openMap(self):
+		os.startfile('https://www.google.com/maps/search/?api=1&query='+str(self.lat)+','+str(self.long)+"")
 
 	def writeToFile(self, data):
 		if self.logging == True:
